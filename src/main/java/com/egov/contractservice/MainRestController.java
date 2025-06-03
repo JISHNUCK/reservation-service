@@ -43,10 +43,9 @@ public class MainRestController
         @Autowired
         private RedisTemplate<String, Object> redisTemplate;
 
-       @PostMapping("float/project")
+       @PostMapping("booking/hotel")
        public ResponseEntity<?> floatProject(@RequestBody Project project,
                                              @RequestHeader("Authorization") String token,
-                                             @RequestHeader("traceparent") String traceparent,
                                              HttpServletResponse httpServletResponse,
                                              HttpServletRequest httpServletRequest) throws JsonProcessingException {
            if(tokenService.validateToken(token,ctx))
@@ -79,38 +78,38 @@ public class MainRestController
                cookie1.setMaxAge(3600);
 
                redisTemplate.opsForValue().set(cookie1.getValue(), "Stage 1 Complete - Stage 2 Processing");
-               redisTemplate.opsForValue().set(cookie3.getValue(), "Stage 2 Complete - Stage 3 Processing");
+           //    redisTemplate.opsForValue().set(cookie3.getValue(), "Stage 2 Complete - Stage 3 Processing");
 
 
                if( cookieList.stream().filter(cookie -> cookie.getName().equals("cs-cookie-1")).findAny().isEmpty()) // COOKIE_CHECK
                {
                    //Fresh Request Logic
-
-                   project.setStatus("FLOATED");
+                   log.info("Booked");
+                   project.setStatus("Booked");
                    Project savedProject = projectRepository.save(project);
 
-                   DomainEvent domainEvent  = new DomainEvent();
+               /*    DomainEvent domainEvent  = new DomainEvent();
                    domainEvent.setEventType("CREATE");
                    domainEvent.setDbname("hrs-mongodb");
                    domainEvent.setDocumentid(savedProject.getProjectid());
                    domainEvent.setCollectionname("projects");
                    domainEvent.setPrincipalid(project.getCustomerid());
                    domainEvent.setEndpoint("contract-service/api/v1/float/project");
-                   domainEvent.getTraceparent().add(traceparent);
+                   domainEvent.getTraceparent().add(traceparent);*/
 
-                   log.info("Domain Event updation in Progress: "+domainEvent);
-                   redisTemplate.opsForValue().set(cookie4.getValue(), domainEvent);
-                   log.info("Domain Event updated in Redis with key : "+ cookie4.getValue());
+               //    log.info("Domain Event updation in Progress: "+domainEvent);
+               //    redisTemplate.opsForValue().set(cookie4.getValue(), domainEvent);
+               //    log.info("Domain Event updated in Redis with key : "+ cookie4.getValue());
 
                    // Cookie generation code
-                   Cookie cookie2 = new Cookie("projectid", String.valueOf(savedProject.getProjectid()));
-                   cookie1.setMaxAge(3600);
+               //    Cookie cookie2 = new Cookie("projectid", String.valueOf(savedProject.getProjectid()));
+               //    cookie1.setMaxAge(3600);
 
-                   WebClient webClient = ctx.getBean("profileNotifyContractorsEurekaBalanced", WebClient.class);
+                   WebClient webClient = ctx.getBean("hotelServicedaysupdate", WebClient.class);
                    // forward ASYNC request to the profile service for shortlisting the contractors
 
                    Mono<String> responseMono = webClient.post()
-                           .uri("/{location}", project.getLocation()) // Append the path variable to the base URL
+                           .uri("/{hotelname}", project.getHotelname()) // Append the path variable to the base URL
                            .header("Authorization", token)
                            .retrieve()
                            .bodyToMono(String.class); // ASYNCHRONOUS
@@ -119,7 +118,7 @@ public class MainRestController
                    responseMono.subscribe(
                            response ->
                            {
-                               log.info(response+" from the profile service");
+                               log.info(response+" from the hotel service");
                                redisTemplate.opsForValue().set(cookie1.getValue(), response);
                            },
                            error ->
@@ -129,12 +128,12 @@ public class MainRestController
                    //
 
                    httpServletResponse.addCookie(cookie1);
-                   httpServletResponse.addCookie(cookie2);
-                   httpServletResponse.addCookie(cookie4);
+                //   httpServletResponse.addCookie(cookie2);
+               //    httpServletResponse.addCookie(cookie4);
 
-                   return ResponseEntity.ok("Project Floated Succesfully");
+                   return ResponseEntity.ok("Booking Succesfull");
                }
-               else if( cookieList.stream().filter(cookie -> cookie.getName().equals("cs-cookie-2")).findAny().isPresent())
+           /*    else if( cookieList.stream().filter(cookie -> cookie.getName().equals("cs-cookie-2")).findAny().isPresent())
                {
                    // follow up logic for the second cookie
 
@@ -158,20 +157,21 @@ public class MainRestController
 
                        return ResponseEntity.status(200).body(cacheValue);
                    }
-               }
+               }*/
                else if( cookieList.stream().filter(cookie -> cookie.getName().equals("cs-cookie-1")).findAny().isPresent())
                {
                    // Cookie Already Present - Follow Up Logic
 
                    String cacheKey =  cookieList.stream().filter(cookie -> cookie.getName().equals("cs-cookie-1")).findAny().get().getValue();
+                   log.info("----------------------" +cacheKey);
                    String cacheValue = (String)redisTemplate.opsForValue().get(cacheKey);
 
-                   if(cacheValue.equals("Stage 1 Complete - Stage 2 Processing"))
-                   {
+                 //  if(cacheValue.equals("Stage 1 Complete - Stage 2 Processing"))
+                  // {
                        log.info("Cookie already present");
                        return ResponseEntity.status(200).body(cacheValue);
-                   }
-                   else
+                 //  }
+                /* else
                    {
                        ProConLink proConLink = new ProConLink();
                        ObjectMapper mapper  = new ObjectMapper();
@@ -216,7 +216,7 @@ public class MainRestController
 
                        httpServletResponse.addCookie(cookie3);
                        return ResponseEntity.status(200).body(cacheValue + " - Stage 2 Complete - Stage 3 Processing");
-                   }
+                   }*/
 
                }
                else
@@ -230,17 +230,5 @@ public class MainRestController
            }
 
        }
-
-    @GetMapping("get/projects/{customerid}")
-    public ResponseEntity<?> getProjectsOfCustomer(@PathVariable("customerid") Long customerid) throws JsonProcessingException
-    {
-        List<Project> projects =  projectRepository.findByCustomerid(customerid);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String datum = objectMapper.writeValueAsString(projects);
-
-        return ResponseEntity.ok(datum);
-    }
-
 
 }

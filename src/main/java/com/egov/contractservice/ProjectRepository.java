@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface ProjectRepository extends MongoRepository<Project, String> {
 
-    List<Project> findByCustomerid(Long customerid);
+   // List<Project> findByCustomerid(Long customerid);
 }
 
 

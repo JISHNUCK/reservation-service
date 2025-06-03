@@ -54,13 +54,13 @@ public class AppConfig
 
     @Bean
     @Scope(value = "prototype")
-    public WebClient profileNotifyContractorsEurekaBalanced(WebClient.Builder webClientBuilder)
+    public WebClient hotelServicedaysupdate(WebClient.Builder webClientBuilder)
     {
-        List<ServiceInstance>  instances =   discoveryClient.getInstances("profile-service");
+        List<ServiceInstance>  instances =   discoveryClient.getInstances("hotel-service");
 
         if(instances.isEmpty())
         {
-            throw new RuntimeException("No instances found for profile-service");
+            throw new RuntimeException("No instances found for hotel-service");
         }
 
         // Assuming you want to use the first instance and can be replaced by a load balancing strategy
@@ -68,7 +68,7 @@ public class AppConfig
         String port = String.valueOf(instances.get(0).getPort());
 
         return webClientBuilder
-                .baseUrl(String.format("http://%s:%s/api/v1/get/contractors/all", hostname, port))
+                .baseUrl(String.format("http://%s:%s/gethotelname", hostname, port))
                 .filter(new LoggingWebClientFilter())
                 .build();
     }
