@@ -1,5 +1,7 @@
 package com.egov.contractservice;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.netflix.eureka.EurekaDiscoveryClient;
@@ -16,6 +18,7 @@ import java.util.List;
 @Configuration
 public class AppConfig
 {
+    private static final Logger log = LoggerFactory.getLogger(AppConfig.class);
 
     @Autowired
     EurekaDiscoveryClient discoveryClient;
@@ -36,7 +39,7 @@ public class AppConfig
     public WebClient authValidateWebClientEurekaDiscovered(WebClient.Builder webClientBuilder)
     {
         List<ServiceInstance>  instances =   discoveryClient.getInstances("auth-service");
-
+        log.info("instance " +instances);
         if(instances.isEmpty())
         {
             throw new RuntimeException("No instances found for auth-service");
@@ -68,7 +71,7 @@ public class AppConfig
         String port = String.valueOf(instances.get(0).getPort());
 
         return webClientBuilder
-                .baseUrl(String.format("http://%s:%s/gethotelname", hostname, port))
+                .baseUrl(String.format("http://%s:%s/api/v1/gethotelname", hostname, port))
                 .filter(new LoggingWebClientFilter())
                 .build();
     }

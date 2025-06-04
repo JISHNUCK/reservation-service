@@ -107,7 +107,7 @@ public class MainRestController
 
                    WebClient webClient = ctx.getBean("hotelServicedaysupdate", WebClient.class);
                    // forward ASYNC request to the profile service for shortlisting the contractors
-
+                    log.info("##########"+ project.getHotelname());
                    Mono<String> responseMono = webClient.post()
                            .uri("/{hotelname}", project.getHotelname()) // Append the path variable to the base URL
                            .header("Authorization", token)
@@ -131,7 +131,7 @@ public class MainRestController
                 //   httpServletResponse.addCookie(cookie2);
                //    httpServletResponse.addCookie(cookie4);
 
-                   return ResponseEntity.ok("Booking Succesfull");
+                   return ResponseEntity.ok("Booking done Succesfully");
                }
            /*    else if( cookieList.stream().filter(cookie -> cookie.getName().equals("cs-cookie-2")).findAny().isPresent())
                {
